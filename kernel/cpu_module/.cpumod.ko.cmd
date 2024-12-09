@@ -1,0 +1,1 @@
+savedcmd_/home/ubuntu22/os_system_monitor/kernel/cpu_module/cpumod.ko := ld -r -m elf_x86_64 -z noexecstack --build-id=sha1  -T scripts/module.lds -o /home/ubuntu22/os_system_monitor/kernel/cpu_module/cpumod.ko /home/ubuntu22/os_system_monitor/kernel/cpu_module/cpumod.o /home/ubuntu22/os_system_monitor/kernel/cpu_module/cpumod.mod.o
