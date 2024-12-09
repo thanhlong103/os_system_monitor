@@ -1,1 +1,1 @@
-void get_memory_info(long *total_mem, long *used_mem, long *mem_buffers, long *mem_cached, long *mem_free, long *mem_shared);
+void get_memory_info(long *total_mem, long *used_mem, long *mem_buffers, long *mem_cached, long *mem_free, long *mem_available, long *kreclaimable);
