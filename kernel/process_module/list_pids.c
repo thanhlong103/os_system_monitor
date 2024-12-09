@@ -21,18 +21,11 @@ static void timer_callback(struct timer_list *timer)
     struct task_struct *task;
 
     printk(KERN_INFO "Listing tasks:\n");
+    printk(KERN_INFO "INITIALIZED\n");
     for_each_process(task) {
         printk(KERN_INFO "PID: %d, Name: %s, Parent PID: %d\n", 
                task->pid, task->comm ,task->parent->pid);
-
-        // if (task->mm) {
-        //     printk(KERN_INFO "  Virtual Memory: %lu\n", task->mm->total_vm);
-        // } else {
-        //     printk(KERN_INFO "  No user memory (kernel thread)\n");
-        // }
     }
-
-    mod_timer(&my_timer, jiffies + msecs_to_jiffies(1000)); // Reschedule in 1000ms
 }
 
 

@@ -7,7 +7,7 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("Your Name");
-MODULE_DESCRIPTION("Retrieve and compare total CPU time with /proc/stat");
+MODULE_DESCRIPTION("Retrieve CPU time");
 MODULE_VERSION("1.0");
 
 // Function to retrieve total CPU time in jiffies
@@ -41,7 +41,7 @@ static void get_cpu_time(void)
     // Print the total CPU time in jiffies without converting to seconds
     pr_info("Total CPU Time: %llu jiffies\n", total_time);
 
-    pr_info("Total CPU Usage: %llu   \n", (total_time - total_idle_time)*100/total_time);
+    pr_info("Total CPU Usage: %llu   \n", (total_idle_time)*100/total_time);
 
     // Print each component as well
     pr_info("User Time: %llu, System Time: %llu, Idle Time: %llu, I/O Wait Time: %llu, IRQ Time: %llu, SoftIRQ Time: %llu, Steal Time: %llu\n", 
