@@ -1,2 +1,1 @@
-/home/irs/os_system_monitor/cpumod/cpumod.o
-
+/home/ubuntu22/os_system_monitor/kernel/cpu_module/cpumod.o

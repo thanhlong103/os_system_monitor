@@ -1,2 +1,0 @@
-/home/irs/os_system_monitor/module/list_pids.o
-
