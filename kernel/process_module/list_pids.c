@@ -1,50 +1,63 @@
 #include <linux/module.h>
 #include <linux/kernel.h>
 #include <linux/init.h>
-#include <linux/jiffies.h>
-#include <linux/timer.h>
-#include <linux/sched/signal.h>
 #include <linux/sched.h>
+#include <linux/cred.h>
+#include <linux/uidgid.h>
+#include <linux/slab.h>
 
 // Module information
 MODULE_LICENSE("GPL");
-MODULE_AUTHOR("---");
-MODULE_DESCRIPTION("Module to list all PIDs of running processes in real-time");
-MODULE_VERSION("1.2");
+MODULE_AUTHOR("Your Name");
+MODULE_DESCRIPTION("Module to list all PIDs of running processes with their usernames and parent PID");
+MODULE_VERSION("1.5");
 
-// Timer object
-static struct timer_list my_timer;
-
-// Timer callback function
-static void timer_callback(struct timer_list *timer)
+// Function to get username from UID
+static char *get_username_from_uid(kuid_t uid)
 {
-    struct task_struct *task;
+    char *username;
+    username = kmalloc(32, GFP_KERNEL);
+    if (!username)
+        return "Unknown";
 
-    printk(KERN_INFO "Listing tasks:\n");
-    printk(KERN_INFO "INITIALIZED\n");
-    for_each_process(task) {
-        printk(KERN_INFO "PID: %d, Name: %s, Parent PID: %d\n", 
-               task->pid, task->comm ,task->parent->pid);
+    // Placeholder logic for fetching the username (not accurate for non-root UIDs)
+    if (uid_eq(uid, GLOBAL_ROOT_UID)) {
+        snprintf(username, 32, "root");
+    } else {
+        snprintf(username, 32, "UID:%d", uid.val);
     }
+
+    return username;
 }
 
+// Function to list processes
+static void list_processes(void)
+{
+    struct task_struct *task;
+    char *username;
+
+    printk(KERN_INFO "Listing tasks:\n");
+    for_each_process(task) {
+        username = get_username_from_uid(task_uid(task));
+
+        printk(KERN_INFO "PID: %d, Name: %s, User: %s, Parent PID: %d\n",
+               task->pid, task->comm, username, task->parent->pid);
+
+        kfree(username);
+    }
+}
 
 // Module initialization function
 static int __init list_pids_init(void)
 {
-    // Initialize and start the timer
-    timer_setup(&my_timer, timer_callback, 0);
-    mod_timer(&my_timer, jiffies + msecs_to_jiffies(1000)); // Start in 1000ms
-
-    printk(KERN_INFO "Module loaded: Timer started for task listing.\n");
+    printk(KERN_INFO "Module loaded: Listing tasks.\n");
+    list_processes();
     return 0; // Successfully loaded
 }
 
 // Module cleanup function
 static void __exit list_pids_exit(void)
 {
-    // Remove the timer
-    del_timer(&my_timer);
     printk(KERN_INFO "Module removed.\n");
 }
 
