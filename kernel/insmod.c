@@ -16,11 +16,6 @@ void insert_module(const char *module_name) {
     char command[256];
     snprintf(command, sizeof(command), "sudo insmod cpu_module/%s", module_name);
     int result = system(command);
-    if (result == 0) {
-        printf("Module %s inserted successfully.\n", module_name);
-    } else {
-        printf("Failed to insert module %s.\n", module_name);
-    }
 }
 
 void remove_module(const char *module_name) {
@@ -29,22 +24,20 @@ void remove_module(const char *module_name) {
     // if (system(command) == 0) { // Module is loaded
     snprintf(command, sizeof(command), "sudo rmmod %s", module_name);
     int result = system(command);
-    if (result == 0) {
-        printf("Module %s removed successfully.\n", module_name);
-    } else {
-        printf("Failed to remove module %s.\n", module_name);
-    }
-
 }
 
 void print_cpu_usage() {
-    // Read from dmesg to print kernel log messages
-    printf("Fetching CPU usage...\n");
+    // Print only relevant CPU usage messages
+    // printf("Fetching CPU usage...\n");
     system("sudo dmesg | grep 'Total CPU Usage'");
 }
 
+
 int main() {
     while (1) {
+        // Clear the entire dmesg buffer (optional)
+        system("sudo dmesg -C");
+
         // Insert the module
         insert_module(MODULE_NAME);
 
