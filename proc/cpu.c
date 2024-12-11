@@ -189,7 +189,7 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
         fclose(fp);
     }
 
-    double mem_usage_percentage = (total_memory > 0) ? (mem_usage / (double)total_memory) * 100.0 : 0.0;
+        double mem_usage_percentage = (total_memory > 0) ? (mem_usage / (double)total_memory) * 100.0 : 0.0;
 
     snprintf(path, sizeof(path), "/proc/%s", entry_name);
     struct stat statbuf;
@@ -257,14 +257,15 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\n\033[1;36m%-6s %-12s %-20s %-15s %-15s\033[0m\n", "PID", "USER", "NAME", "CPU_USAGE(%)", "MEM_USAGE(%)");
-    printf("-----------------------------------------------------------------------------------\n");
+    printf("\n\033[1;36m%-6s %-12s %-20s %-15s %-15s %-15s\033[0m\n", "PID", "USER", "NAME", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)");
+    printf("------------------------------------------------------------------------------------------------\n");
 
     for (int i = 0; i < process_count && i < 10; i++) {
-        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;35m%-20s \033[1;34m%-15.2f \033[1;31m%-15.2f\033[0m\n",
+        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;35m%-20s \033[1;34m%-15s \033[1;34m%-15.2f \033[1;31m%-15.2f\033[0m\n",
                processes[i].pid,
                processes[i].user,
                processes[i].name,
+               processes[i].status,
                processes[i].cpu_usage,
                processes[i].mem_usage);
     }
