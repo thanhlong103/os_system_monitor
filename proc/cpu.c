@@ -8,6 +8,7 @@
 #include "cpu.h"
 #include <pwd.h>
 #include <ctype.h>
+#include "io.h"
 
 // Function to calculate CPU usage with breakdown of percentages
 double get_cpu_usage(double *user_pct, double *system_pct, double *idle_pct, double *iowait_pct, double *irq_pct, double *softirq_pct, double *steal_pct) {

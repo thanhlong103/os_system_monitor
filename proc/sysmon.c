@@ -25,7 +25,6 @@ int main() {
         get_memory_info(&total_mem, &used_mem, &mem_buffers, &mem_cached, &mem_free, &mem_available, &kreclaimable, &total_swap, &free_swap);
 
         double cpu_usage = get_cpu_usage(&user_pct, &system_pct, &idle_pct, &iowait_pct, &irq_pct, &softirq_pct, &steal_pct);
-
         update_task_stats(running, sleeping, stopped, zombie, total);
         update_cpu_info(cpu_usage, user_pct, system_pct, idle_pct, iowait_pct, irq_pct, softirq_pct, steal_pct);
         update_memory_info(total_mem, used_mem, mem_available, mem_free, mem_cached, mem_buffers, kreclaimable);
