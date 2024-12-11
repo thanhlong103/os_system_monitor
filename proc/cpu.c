@@ -155,14 +155,14 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
     int pid;
     char comm[256], state;
     long utime, stime, starttime;
-    int priority; 
+    int priority, nice; 
 
     if (fscanf(fp, "%d (%255[^)]) %c", &pid, comm, &state) != 3) {
         fclose(fp);
         return;
     }
     for (int i = 0; i < 10; i++) fscanf(fp, "%*s");
-    fscanf(fp, "%ld %ld %*s %*s %d %*s %*s %ld", &utime, &stime, &priority, &starttime);
+    fscanf(fp, "%ld %ld %*s %*s %d %d %*s %ld", &utime, &stime, &priority, &nice, &starttime);
     fclose(fp);
     
     long total_time = utime + stime;
@@ -207,6 +207,7 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
     strncpy(process->name, comm, sizeof(process->name) - 1);
     process->cpu_usage = cpu_usage;
     process->mem_usage = mem_usage_percentage;
+    process->nice = nice;
 
     if (priority == -100) {
         strcpy(process->priority, "rt");
@@ -266,17 +267,18 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\n\033[1;36m%-6s %-12s %-8s %-15s %-15s %-10s %-45s\033[0m\n", "PID", "USER", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "PRIORITY", "NAME");
+    printf("\n\033[1;36m%-6s %-12s %-8s %-15s %-15s %-10s %-5s %-45s\033[0m\n", "PID", "USER", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "PRIORITY", "NICE", "NAME");
     printf("--------------------------------------------------------------------------------------------\n");
 
     for (int i = 0; i < process_count && i < 20; i++) {
-        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-10s\033[0m \033[1;35m%-45s \n",
+        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-10s\033[0m \033[1;32m%-5d \033[1;35m%-45s \n",
             processes[i].pid,
             processes[i].user,
             processes[i].status,    
             processes[i].cpu_usage,
             processes[i].mem_usage,
-            processes[i].priority, // Print the priority string
+            processes[i].priority,
+            processes[i].nice,
             processes[i].name);
     }
 
