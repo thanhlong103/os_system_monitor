@@ -1,12 +1,11 @@
-#include <stdio.h>      // For printf, perror, fopen, fgets, fscanf, etc.
-#include <stdlib.h>     // For malloc, realloc, free, qsort, etc.
-#include <string.h>     // For strncpy, strcmp, strcspn, etc.
-#include <dirent.h>     // For opendir, readdir, closedir, struct dirent
-#include <ctype.h>      // For isdigit
-#include <unistd.h>     // For sysconf
-#include <sys/stat.h>   // For stat, struct stat
-#include <pwd.h> 
-#include "memory.h"
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <dirent.h>
+#include <ctype.h>
+#include <unistd.h>
+#include <sys/stat.h>
+#include <pwd.h>
 
 void get_memory_info(long *total_mem, long *used_mem, long *mem_buffers, long *mem_cached, long *mem_free, long *mem_available, long *kreclaimable) {
     FILE *fp = fopen("/proc/meminfo", "r");
@@ -44,5 +43,5 @@ void get_memory_info(long *total_mem, long *used_mem, long *mem_buffers, long *m
     fclose(fp);
 
     // Used memory = Total memory - Free memory
-    *used_mem = *total_mem - *mem_available;
+    *used_mem = *total_mem - *mem_available - *mem_free;
 }
