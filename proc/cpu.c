@@ -155,15 +155,16 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
     int pid;
     char comm[256], state;
     long utime, stime, starttime;
+    int priority; 
 
     if (fscanf(fp, "%d (%255[^)]) %c", &pid, comm, &state) != 3) {
         fclose(fp);
         return;
     }
     for (int i = 0; i < 10; i++) fscanf(fp, "%*s");
-    fscanf(fp, "%ld %ld %*s %*s %*s %*s %*s %ld", &utime, &stime, &starttime);
+    fscanf(fp, "%ld %ld %*s %*s %d %*s %*s %ld", &utime, &stime, &priority, &starttime);
     fclose(fp);
-
+    
     long total_time = utime + stime;
     double process_uptime = system_uptime - (starttime / clock_ticks);
     double cpu_usage = 0.0;
@@ -206,6 +207,12 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
     strncpy(process->name, comm, sizeof(process->name) - 1);
     process->cpu_usage = cpu_usage;
     process->mem_usage = mem_usage_percentage;
+
+    if (priority == -100) {
+        strcpy(process->priority, "rt");
+    } else {
+        snprintf(process->priority, sizeof(process->priority), "%d", priority);
+    }
 }
 
 int compare_cpu_usage(const void *a, const void *b) {
@@ -259,17 +266,17 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\n\033[1;36m%-6s %-12s %-25s %-15s %-15s %-15s\033[0m\n", "PID", "USER", "NAME", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)");
-    printf("------------------------------------------------------------------------------------------------\n");
+    printf("\n\033[1;36m%-6s %-12s %-15s %-15s %-10s %-20s\033[0m\n", "PID", "USER", "CPU_USAGE(%)", "MEM_USAGE(%)", "PRIORITY", "NAME");
+    printf("--------------------------------------------------------------------------------------------\n");
 
-    for (int i = 0; i < process_count && i < 10; i++) {
-        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;35m%-25s \033[1;34m%-15s \033[1;34m%-15.2f \033[1;31m%-15.2f\033[0m\n",
-               processes[i].pid,
-               processes[i].user,
-               processes[i].name,
-               processes[i].status,
-               processes[i].cpu_usage,
-               processes[i].mem_usage);
+    for (int i = 0; i < process_count && i < 20; i++) {
+        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-10s\033[0m \033[1;35m%-45s \n",
+            processes[i].pid,
+            processes[i].user,
+            processes[i].cpu_usage,
+            processes[i].mem_usage,
+            processes[i].priority, // Print the priority string
+            processes[i].name);
     }
 
     free(processes);
