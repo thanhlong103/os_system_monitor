@@ -203,7 +203,7 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\033[%d;1H \033[1;36m%-6s %-12s %-10s %-5s %-15s %-15s %-15s %-8s %-15s %-15s %-15s %-20s %-45s\033[0m\n", 
+    printf("\033[%d;1H \033[1;33m%-6s %-12s %-10s %-5s %-15s %-15s %-15s %-8s %-15s %-15s %-15s %-20s %-45s\033[0m\n", 
         PROC_INFO_POS, "PID", "USER", "PRIORITY", "NICE", "VIRTUAL_MEM", "RES_MEM", "SH_MEM", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "DISK READ (MB)", "DISK WRITE (MB)", "NAME");
     printf("\033[%d;1H------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n", PROC_INFO_POS+1);
 

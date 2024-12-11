@@ -15,9 +15,9 @@ void print_static_ui()
 
     // Static sections
     printf("\033[%d;1H\033[1;36mTask Statistics:\033[0m\n", TASK_STATS_POS);
-    printf("\033[%d;1H\033[1;34mCPU INFORMATION:\033[0m\n", CPU_INFO_POS);
-    printf("\033[%d;1H\033[1;34mMEMORY AND SWAP:\033[0m\n", MEM_INFO_POS);
-    printf("\033[%d;1H\033[1;34mFILE SYSTEM:\033[0m\n", FILE_SYSTEM_POS);
+    printf("\033[%d;1H\033[1;36mCPU INFORMATION:\033[0m\n", CPU_INFO_POS);
+    printf("\033[%d;1H\033[1;36mMEMORY AND SWAP:\033[0m\n", MEM_INFO_POS);
+    printf("\033[%d;1H\033[1;36mFILE SYSTEM:\033[0m\n", FILE_SYSTEM_POS);
 }
 
 void update_task_stats(int running, int sleeping, int stopped, int zombie, int total)

@@ -61,7 +61,7 @@ void get_file_system_stats() {
     qsort(fs_list, fs_count, sizeof(FileSystemInfo), compare_fs);
 
     // Print the top 4 file systems
-    printf("\033[1;36m");
+    printf("\033[1;33m");
     printf("\033[%d;1H %-20s %-30s %-20s %-15s %-10s %-20s\n", FILE_SYSTEM_POS+1,
            "Device", "Directory", "Type", "Total (GB)", "Used (GB)", "Available (GB)");
     printf("\033[%d;1H-------------------------------------------------------------------------------------------------------------------------\n", FILE_SYSTEM_POS + 2);
