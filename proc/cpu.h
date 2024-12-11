@@ -2,6 +2,7 @@ typedef struct {
     int pid;
     char user[256];
     char name[256];
+    char priority[16];
     double cpu_usage;
     double mem_usage;
     char status[1];
