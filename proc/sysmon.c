@@ -7,6 +7,7 @@
 #include "ui.h"
 #include "memory.h"
 #include "cpu.h"
+#include "process.h"
 
 int main() {
     print_static_ui();

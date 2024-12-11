@@ -2,6 +2,8 @@
 #include "ui.h"
 #include "cpu.h"
 
+#include "process.h"
+
 void print_static_ui()
 {
     // Enable alternate screen and clear it
@@ -53,6 +55,7 @@ void update_swap_info(long total_swap, long free_swap)
            total_swap / 1024.0,                               
            (total_swap - free_swap)/ 1024.0,                                 
            free_swap / 1024.0); 
+    printf("\n");
 }
 
 void update_process_info()
