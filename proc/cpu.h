@@ -6,6 +6,7 @@ typedef struct {
     double cpu_usage;
     double mem_usage;
     char status[1];
+    int nice;
 } ProcessInfo;
 
 typedef struct {
