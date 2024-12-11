@@ -15,7 +15,6 @@ void print_static_ui()
     printf("\033[%d;1H\033[1;36mTask Statistics:\033[0m\n", TASK_STATS_POS);
     printf("\033[%d;1H\033[1;34mCPU INFORMATION:\033[0m\n", CPU_INFO_POS);
     printf("\033[%d;1H\033[1;34mMEMORY INFORMATION:\033[0m\n", MEM_INFO_POS);
-    printf("\033[%d;1H\033[1;34mPROCESSES BY CPU USAGE:\033[0m\n", PROC_INFO_POS);
 }
 
 void update_task_stats(int running, int sleeping, int stopped, int zombie, int total)

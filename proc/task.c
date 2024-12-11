@@ -1,6 +1,7 @@
 #include <stdio.h>      // For printf, perror, fopen, fgets, fscanf, etc.
 #include <dirent.h>     // For opendir, readdir, closedir, struct dirent
 #include "task.h"
+#include <ctype.h>
 
 void get_task_info(int *running, int *sleeping, int *stopped, int *zombie, int *total) {
     DIR *dir = opendir("/proc");
