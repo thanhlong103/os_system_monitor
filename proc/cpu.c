@@ -201,7 +201,7 @@ void list_processes() {
         PrevProcessData *prev = find_prev_data(pid);
         if (prev && process_uptime > prev->prev_process_uptime) {
             cpu_usage = (double)(total_time - prev->prev_total_time) * 100 /
-                        (clock_ticks * (process_uptime - prev->prev_process_uptime));
+                        (clock_ticks * (process_uptime - prev->prev_process_uptime - 0.001));
         }
 
         update_prev_data(pid, total_time, process_uptime);

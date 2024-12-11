@@ -15,9 +15,6 @@
 #include "memory.h"
 #include "cpu.h"
 
-// Function prototypes
-double get_cpu_usage();
-
 int main() {
     print_static_ui();
 
