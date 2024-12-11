@@ -9,6 +9,7 @@ typedef struct {
     int nice;
     long virtual_mem;
     long res_mem;
+    long shared_mem;
 } ProcessInfo;
 
 typedef struct {
