@@ -4,6 +4,7 @@ typedef struct {
     char name[256];
     double cpu_usage;
     double mem_usage;
+    char status[1];
 } ProcessInfo;
 
 typedef struct {
