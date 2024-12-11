@@ -9,6 +9,8 @@
 #include <pwd.h>
 #include <ctype.h>
 #include "process.h"
+#include "io.h"
+#include "ui.h"
 
 #define MAX_PROCESSES 4096
 #define INITIAL_PROCESS_CAPACITY 1024
@@ -201,12 +203,15 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\033[1;36m%-6s %-12s %-10s %-5s %-15s %-15s %-15s %-8s %-15s %-15s %-45s\033[0m\n", 
-        "PID", "USER", "PRIORITY", "NICE", "VIRTUAL_MEM", "RES_MEM", "SH_MEM", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "NAME");
-    printf("--------------------------------------------------------------------------------------------------------------------------------------------------\n");
+    printf("\033[%d;1H \033[1;36m%-6s %-12s %-10s %-5s %-15s %-15s %-15s %-8s %-15s %-15s %-15s %-20s %-45s\033[0m\n", 
+        PROC_INFO_POS, "PID", "USER", "PRIORITY", "NICE", "VIRTUAL_MEM", "RES_MEM", "SH_MEM", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "DISK READ (MB)", "DISK WRITE (MB)", "NAME");
+    printf("\033[%d;1H------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n", PROC_INFO_POS+1);
 
     for (int i = 0; i < process_count && i < 10; i++) {
-        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;37m%-10s\033[0m \033[1;32m%-5d \033[1;35m%-15ld \033[1;35m%-15ld \033[1;35m%-15ld \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;35m%-45s\n",
+        unsigned long long read_bytes = 0, write_bytes = 0;
+        get_disk_io(processes[i].pid, &read_bytes, &write_bytes);
+
+        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;37m%-10s\033[0m \033[1;32m%-5d \033[1;35m%-15ld \033[1;35m%-15ld \033[1;35m%-15ld \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-15.2f \033[1;37m%-20.2f \033[1;35m%-45s\n",
             processes[i].pid,
             processes[i].user,
             processes[i].priority,
@@ -217,6 +222,8 @@ void list_processes() {
             processes[i].status,
             processes[i].cpu_usage,
             processes[i].mem_usage,
+            (double) read_bytes/(1000*1000),
+            (double) write_bytes/(1000*1000),
             processes[i].name);
     }
 

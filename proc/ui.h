@@ -5,7 +5,8 @@
 #define TASK_STATS_POS 4
 #define CPU_INFO_POS 7
 #define MEM_INFO_POS 11
-#define PROC_INFO_POS 12
+#define PROC_INFO_POS 16
+#define FILE_SYSTEM_POS 38
 
 void print_static_ui();
 void update_task_stats(int running, int sleeping, int stopped, int zombie, int total);
