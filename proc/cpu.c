@@ -177,7 +177,7 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
     }
     update_prev_data(pid, total_time, process_uptime);
 
-    long mem_usage = 0;
+    long mem_usage, virtual_mem = 0;
     snprintf(path, sizeof(path), "/proc/%s/status", entry_name);
     fp = fopen(path, "r");
     if (fp) {
@@ -185,13 +185,15 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
         while (fgets(line, sizeof(line), fp)) {
             if (strncmp(line, "VmRSS:", 6) == 0) {
                 sscanf(line, "VmRSS: %ld", &mem_usage);
-                break;
+            }
+            if (strncmp(line, "VmSize:", 7) == 0) {
+                sscanf(line, "VmSize: %ld", &virtual_mem);
             }
         }
         fclose(fp);
     }
 
-        double mem_usage_percentage = (total_memory > 0) ? (mem_usage / (double)total_memory) * 100.0 : 0.0;
+    double mem_usage_percentage = (total_memory > 0) ? (mem_usage / (double)total_memory) * 100.0 : 0.0;
 
     snprintf(path, sizeof(path), "/proc/%s", entry_name);
     struct stat statbuf;
@@ -205,6 +207,8 @@ void read_process_info(const char *entry_name, long system_uptime, long clock_ti
     process->pid = pid;
     process->status[0] = state;
     process->status[1] = '\0';
+    process->virtual_mem = virtual_mem;
+    process->res_mem = mem_usage;
     strncpy(process->name, comm, sizeof(process->name) - 1);
     process->cpu_usage = cpu_usage;
     process->mem_usage = mem_usage_percentage;
@@ -268,18 +272,21 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\n\033[1;36m%-6s %-12s %-8s %-15s %-15s %-10s %-5s %-45s\033[0m\n", "PID", "USER", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "PRIORITY", "NICE", "NAME");
+    printf("\033[1;36m%-6s %-12s %-10s %-5s %-15s %-15s %-8s %-15s %-15s %-45s\033[0m\n", 
+        "PID", "USER", "PRIORITY", "NICE", "VIRTUAL_MEM", "RES_MEM", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "NAME");
     printf("--------------------------------------------------------------------------------------------\n");
 
-    for (int i = 0; i < process_count && i < 20; i++) {
-        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-10s\033[0m \033[1;32m%-5d \033[1;35m%-45s \n",
+    for (int i = 0; i < process_count && i < 10; i++) {
+        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;37m%-10s\033[0m \033[1;32m%-5d \033[1;35m%-15ld \033[1;35m%-15ld \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;35m%-45s \n",
             processes[i].pid,
             processes[i].user,
-            processes[i].status,    
-            processes[i].cpu_usage,
-            processes[i].mem_usage,
             processes[i].priority,
             processes[i].nice,
+            processes[i].virtual_mem,
+            processes[i].res_mem,
+            processes[i].status,
+            processes[i].cpu_usage,
+            processes[i].mem_usage,
             processes[i].name);
     }
 

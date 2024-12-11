@@ -7,6 +7,8 @@ typedef struct {
     double mem_usage;
     char status[1];
     int nice;
+    long virtual_mem;
+    long res_mem;
 } ProcessInfo;
 
 typedef struct {
