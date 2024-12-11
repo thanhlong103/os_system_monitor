@@ -18,7 +18,7 @@ Follow these steps to compile the project:
 
 2. Compile the source files:
 ```
-    gcc sysmon.c ui.c cpu.c task.c memory.c io.c process.c file_system.c -o sysmon
+    gcc sysmon.c ui.c cpu.c task.c memory.c io.c process.c filesystem.c -o sysmon
 ```
 
 ## Usage
