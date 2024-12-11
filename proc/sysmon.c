@@ -10,7 +10,21 @@
 #include "process.h"
 #include "filesystem.h"
 
-int main() {
+int main(int argc, char *argv[]) {
+    // Default sleep time in seconds
+    int sleep_time = 1;
+
+    // Check if the user provided a custom sleep time
+    if (argc > 1) {
+        sleep_time = atoi(argv[1]);
+
+        // Check if the provided sleep time is a valid natural number
+        if (sleep_time <= 0) {
+            fprintf(stderr, "Invalid sleep time provided. Using default (1 second).\n");
+            sleep_time = 1;  // Reset to default
+        }
+    }
+
     print_static_ui();
 
     int running, sleeping, stopped, zombie, total;
@@ -29,7 +43,7 @@ int main() {
         update_task_stats(running, sleeping, stopped, zombie, total);
         update_cpu_info(cpu_usage, user_pct, system_pct, idle_pct, iowait_pct, irq_pct, softirq_pct, steal_pct);
         update_memory_info(total_mem, used_mem, mem_available, mem_free, mem_cached, mem_buffers, kreclaimable);
-        update_swap_info(total_swap,free_swap);
+        update_swap_info(total_swap, free_swap);
         update_process_info();
 
         get_file_system_stats();
@@ -41,7 +55,7 @@ int main() {
         // printf("Calculation Time: %.6f s", calculation_time); // Overwrite previous output
 
         fflush(stdout); // Ensure immediate output
-        sleep(1);       // Refresh every second
+        sleep(sleep_time);  // Refresh based on user-defined sleep time
     }
 
     // Restore normal screen on exit
