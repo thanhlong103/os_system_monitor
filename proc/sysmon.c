@@ -101,18 +101,18 @@ int main() {
     print_static_ui();
 
     int running, sleeping, stopped, zombie, total;
-    long total_mem, used_mem, mem_free, mem_cached, mem_buffers, mem_available;
+    long total_mem, used_mem, mem_free, mem_cached, mem_buffers, mem_available, kreclaimable;
     double user_pct, system_pct, idle_pct, iowait_pct, irq_pct, softirq_pct, steal_pct;
 
     while (1) {
         get_task_info(&running, &sleeping, &stopped, &zombie, &total);
-        get_memory_info(&total_mem, &used_mem, &mem_buffers, &mem_cached, &mem_free, &mem_available);
+        get_memory_info(&total_mem, &used_mem, &mem_buffers, &mem_cached, &mem_free, &mem_available, &kreclaimable);
 
         double cpu_usage = get_cpu_usage(&user_pct, &system_pct, &idle_pct, &iowait_pct, &irq_pct, &softirq_pct, &steal_pct);
 
         update_task_stats(running, sleeping, stopped, zombie, total);
         update_cpu_info(cpu_usage, user_pct, system_pct, idle_pct, iowait_pct, irq_pct, softirq_pct, steal_pct);
-        update_memory_info(total_mem, used_mem, mem_free, mem_cached, mem_buffers);
+        update_memory_info(total_mem, used_mem, mem_free, mem_cached, mem_buffers, kreclaimable);
         update_process_info();
 
         fflush(stdout); // Ensure immediate output

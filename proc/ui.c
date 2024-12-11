@@ -34,12 +34,12 @@ void update_cpu_info(double cpu_usage, double user_pct, double system_pct, doubl
            CPU_INFO_POS + 2, user_pct, system_pct, idle_pct, iowait_pct, irq_pct, softirq_pct, steal_pct);
 }
 
-void update_memory_info(long total_mem, long used_mem, long mem_free, long mem_cached, long mem_buffers) {
+void update_memory_info(long total_mem, long used_mem, long mem_free, long mem_cached, long mem_buffers, long kreclaimable) {
     printf("\033[%d;1HTotal Memory: \033[1;32m%.2f MB\033[0m\n", MEM_INFO_POS + 1, total_mem / 1024.0);
     printf("\033[%d;1HUsed Memory: \033[1;31m%.2f MB\033[0m\n", MEM_INFO_POS + 2, used_mem / 1024.0);
     printf("\033[%d;1HFree Memory: \033[1;31m%.2f MB\033[0m\n", MEM_INFO_POS + 3, mem_free / 1024.0);
-    printf("\033[%d;1HBuffer Memory: \033[1;31m%.2f MB\033[0m\n", MEM_INFO_POS + 4, mem_buffers / 1024.0);
-    printf("\033[%d;1HCache Memory: \033[1;31m%.2f MB\033[0m\n", MEM_INFO_POS + 5, mem_cached / 1024.0);
+    printf("\033[%d;1HBuffer/Cache Memory: \033[1;31m%.2f MB\033[0m\n", MEM_INFO_POS + 4, (mem_buffers + mem_cached + kreclaimable) / 1024.0);
+    // printf("\033[%d;1HCache Memory: \033[1;31m%.2f MB\033[0m\n", MEM_INFO_POS + 5, mem_cached / 1024.0);
     printf("\033[%d;1HMemory Usage: \033[1;36m%.2f%%\033[0m\n", MEM_INFO_POS + 6, (double)used_mem / total_mem * 100.0);
     printf("==============================================\n");
 }
