@@ -1,12 +1,12 @@
-#include <stdio.h>      // For printf, perror, fopen, fgets, fscanf, etc.
-#include <stdlib.h>     // For malloc, realloc, free, qsort, etc.
-#include <string.h>     // For strncpy, strcmp, strcspn, etc.
-#include <dirent.h>     // For opendir, readdir, closedir, struct dirent
-#include <ctype.h>      // For isdigit
-#include <unistd.h>     // For sysconf
-#include <sys/stat.h>   // For stat, struct stat
-#include <pwd.h> 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <dirent.h>
 #include "cpu.h"
+#include <pwd.h>
 
 // Function to calculate CPU usage with breakdown of percentages
 double get_cpu_usage(double *user_pct, double *system_pct, double *idle_pct, double *iowait_pct, double *irq_pct, double *softirq_pct, double *steal_pct) {
