@@ -89,6 +89,7 @@ double get_cpu_usage(double *user_pct, double *system_pct, double *idle_pct, dou
 }
 
 #define MAX_PROCESSES 4096
+#define INITIAL_PROCESS_CAPACITY 1024
 
 PrevProcessData prev_data[MAX_PROCESSES];
 int prev_data_count = 0;
@@ -107,145 +108,149 @@ void update_prev_data(int pid, long total_time, double process_uptime) {
     if (data) {
         data->prev_total_time = total_time;
         data->prev_process_uptime = process_uptime;
-    } else {
-        if (prev_data_count < MAX_PROCESSES) {
-            prev_data[prev_data_count].pid = pid;
-            prev_data[prev_data_count].prev_total_time = total_time;
-            prev_data[prev_data_count].prev_process_uptime = process_uptime;
-            prev_data_count++;
+    } else if (prev_data_count < MAX_PROCESSES) {
+        prev_data[prev_data_count].pid = pid;
+        prev_data[prev_data_count].prev_total_time = total_time;
+        prev_data[prev_data_count].prev_process_uptime = process_uptime;
+        prev_data_count++;
+    }
+}
+
+long get_uptime() {
+    FILE *fp = fopen("/proc/uptime", "r");
+    if (!fp) {
+        perror("Failed to read /proc/uptime");
+        return -1;
+    }
+    long uptime;
+    fscanf(fp, "%ld", &uptime);
+    fclose(fp);
+    return uptime;
+}
+
+long get_total_memory() {
+    FILE *fp = fopen("/proc/meminfo", "r");
+    if (!fp) {
+        perror("Failed to read /proc/meminfo");
+        return -1;
+    }
+    long total_memory = 0;
+    char line[256];
+    while (fgets(line, sizeof(line), fp)) {
+        if (strncmp(line, "MemTotal:", 9) == 0) {
+            sscanf(line, "MemTotal: %ld", &total_memory);
+            break;
         }
     }
+    fclose(fp);
+    return total_memory;
+}
+
+void read_process_info(const char *entry_name, long system_uptime, long clock_ticks, long total_memory, ProcessInfo *process) {
+    char path[512];
+    snprintf(path, sizeof(path), "/proc/%s/stat", entry_name);
+    FILE *fp = fopen(path, "r");
+    if (!fp) return;
+
+    int pid;
+    char comm[256], state;
+    long utime, stime, starttime;
+
+    if (fscanf(fp, "%d (%255[^)]) %c", &pid, comm, &state) != 3) {
+        fclose(fp);
+        return;
+    }
+    for (int i = 0; i < 10; i++) fscanf(fp, "%*s");
+    fscanf(fp, "%ld %ld %*s %*s %*s %*s %*s %ld", &utime, &stime, &starttime);
+    fclose(fp);
+
+    long total_time = utime + stime;
+    double process_uptime = system_uptime - (starttime / clock_ticks);
+    double cpu_usage = 0.0;
+
+    PrevProcessData *prev = find_prev_data(pid);
+    if (prev && process_uptime > prev->prev_process_uptime) {
+        cpu_usage = (double)(total_time - prev->prev_total_time) * 100.0 /
+                    (clock_ticks * (process_uptime - prev->prev_process_uptime));
+    }
+    update_prev_data(pid, total_time, process_uptime);
+
+    long mem_usage = 0;
+    snprintf(path, sizeof(path), "/proc/%s/status", entry_name);
+    fp = fopen(path, "r");
+    if (fp) {
+        char line[256];
+        while (fgets(line, sizeof(line), fp)) {
+            if (strncmp(line, "VmRSS:", 6) == 0) {
+                sscanf(line, "VmRSS: %ld", &mem_usage);
+                break;
+            }
+        }
+        fclose(fp);
+    }
+
+    double mem_usage_percentage = (total_memory > 0) ? (mem_usage / (double)total_memory) * 100.0 : 0.0;
+
+    snprintf(path, sizeof(path), "/proc/%s", entry_name);
+    struct stat statbuf;
+    if (stat(path, &statbuf) == 0) {
+        struct passwd *pwd = getpwuid(statbuf.st_uid);
+        strncpy(process->user, pwd ? pwd->pw_name : "unknown", sizeof(process->user) - 1);
+    } else {
+        strcpy(process->user, "unknown");
+    }
+
+    process->pid = pid;
+    strncpy(process->name, comm, sizeof(process->name) - 1);
+    process->cpu_usage = cpu_usage;
+    process->mem_usage = mem_usage_percentage;
 }
 
 int compare_cpu_usage(const void *a, const void *b) {
     double usage_a = ((ProcessInfo *)a)->cpu_usage;
     double usage_b = ((ProcessInfo *)b)->cpu_usage;
-    return (usage_b - usage_a) > 0 ? 1 : -1;
+    return (usage_b > usage_a) - (usage_b < usage_a);
 }
 
 void list_processes() {
-    DIR *dir;
-    struct dirent *entry;
-    char path[512];
-    char process_name[256];
-    struct stat statbuf;
-    FILE *fp;
-    long system_uptime;
+    DIR *dir = opendir("/proc");
+    if (!dir) {
+        perror("Failed to open /proc directory");
+        return;
+    }
+
+    long system_uptime = get_uptime();
+    long total_memory = get_total_memory();
     long clock_ticks = sysconf(_SC_CLK_TCK);
-    long total_memory = 0;
-    // ProcessInfo *processes = NULL;
+    if (system_uptime == -1 || total_memory == -1) {
+        closedir(dir);
+        return;
+    }
+
     int process_count = 0;
-    int max_processes = 1024;
-    ProcessInfo *processes = malloc(MAX_PROCESSES * sizeof(ProcessInfo));
-
-    if (processes == NULL) {
+    ProcessInfo *processes = malloc(INITIAL_PROCESS_CAPACITY * sizeof(ProcessInfo));
+    if (!processes) {
         perror("Failed to allocate memory for process list");
+        closedir(dir);
         return;
     }
+    int capacity = INITIAL_PROCESS_CAPACITY;
 
-    fp = fopen("/proc/meminfo", "r");
-    if (fp) {
-        char line[256];
-        while (fgets(line, sizeof(line), fp)) {
-            if (strncmp(line, "MemTotal:", 9) == 0) {
-                sscanf(line, "MemTotal: %ld", &total_memory);
-                break;
-            }
-        }
-        fclose(fp);
-    } else {
-        perror("Failed to read /proc/meminfo");
-        free(processes);
-        return;
-    }
-
-    fp = fopen("/proc/uptime", "r");
-    if (fp == NULL) {
-        perror("Failed to read /proc/uptime");
-        free(processes);
-        return;
-    }
-    fscanf(fp, "%ld", &system_uptime);
-    fclose(fp);
-
-    if ((dir = opendir("/proc")) == NULL) {
-        perror("opendir");
-        free(processes);
-        return;
-    }
-
+    struct dirent *entry;
     while ((entry = readdir(dir)) != NULL) {
-        if (!isdigit(entry->d_name[0])) {
-            continue;
-        }
+        if (!isdigit(entry->d_name[0])) continue;
 
-        int pid;
-        char comm[256], state;
-        long utime, stime, starttime;
-
-        snprintf(path, sizeof(path), "/proc/%s/stat", entry->d_name);
-        fp = fopen(path, "r");
-        if (fp) {
-            // Read process data, including PID and command name (comm)
-            fscanf(fp, "%d (%255[^)]) %c", &pid, comm, &state); // Extract name without parentheses
-            for (int i = 0; i < 10; i++) fscanf(fp, "%*s");
-            fscanf(fp, "%ld %ld %*s %*s %*s %*s %*s %ld", &utime, &stime, &starttime);
-            fclose(fp);
-        } else {
-            continue; // Skip this process if the stat file can't be read
-}
-        long total_time = utime + stime;
-        double process_uptime = system_uptime - (starttime / clock_ticks);
-
-        double cpu_usage = 0.0;
-        PrevProcessData *prev = find_prev_data(pid);
-        if (prev && process_uptime > prev->prev_process_uptime) {
-            cpu_usage = (double)(total_time - prev->prev_total_time) * 100 /
-                        (clock_ticks * (process_uptime - prev->prev_process_uptime));
-        }
-
-        update_prev_data(pid, total_time, process_uptime);
-
-        long mem_usage = 0;
-        snprintf(path, sizeof(path), "/proc/%s/status", entry->d_name);
-        fp = fopen(path, "r");
-        if (fp) {
-            char line[256];
-            while (fgets(line, sizeof(line), fp)) {
-                if (strncmp(line, "VmRSS:", 6) == 0) {
-                    sscanf(line, "VmRSS: %ld", &mem_usage);
-                    break;
-                }
-            }
-            fclose(fp);
-        }
-
-        double mem_usage_percentage = (total_memory > 0) ? (mem_usage / (double)total_memory) * 100.0 : 0.0;
-
-        if (process_count >= MAX_PROCESSES) {
-            max_processes *= 2;
-            processes = realloc(processes, MAX_PROCESSES * sizeof(ProcessInfo));
-            if (processes == NULL) {
-                perror("Failed to reallocate memory for process list");
+        if (process_count >= capacity) {
+            capacity *= 2;
+            processes = realloc(processes, capacity * sizeof(ProcessInfo));
+            if (!processes) {
+                perror("Failed to reallocate memory");
+                closedir(dir);
                 return;
             }
         }
 
-        processes[process_count].pid = pid; 
-        strncpy(processes[process_count].name, comm, sizeof(processes[process_count].name) - 1);
-        processes[process_count].name[sizeof(processes[process_count].name) - 1] = '\0'; // Ensure null-termination
-
-
-        snprintf(path, sizeof(path), "/proc/%s", entry->d_name);
-        if (stat(path, &statbuf) == 0) {
-            struct passwd *pwd = getpwuid(statbuf.st_uid);
-            strncpy(processes[process_count].user, (pwd != NULL) ? pwd->pw_name : "unknown",
-                    sizeof(processes[process_count].user) - 1);
-        } else {
-            strcpy(processes[process_count].user, "unknown");
-        }
-        processes[process_count].cpu_usage = cpu_usage;
-        processes[process_count].mem_usage = mem_usage_percentage; // Memory usage in percentage
+        read_process_info(entry->d_name, system_uptime, clock_ticks, total_memory, &processes[process_count]);
         process_count++;
     }
     closedir(dir);
