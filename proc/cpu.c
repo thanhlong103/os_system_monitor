@@ -266,13 +266,14 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\n\033[1;36m%-6s %-12s %-15s %-15s %-10s %-20s\033[0m\n", "PID", "USER", "CPU_USAGE(%)", "MEM_USAGE(%)", "PRIORITY", "NAME");
+    printf("\n\033[1;36m%-6s %-12s %-8s %-15s %-15s %-10s %-45s\033[0m\n", "PID", "USER", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "PRIORITY", "NAME");
     printf("--------------------------------------------------------------------------------------------\n");
 
     for (int i = 0; i < process_count && i < 20; i++) {
-        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-10s\033[0m \033[1;35m%-45s \n",
+        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-10s\033[0m \033[1;35m%-45s \n",
             processes[i].pid,
             processes[i].user,
+            processes[i].status,    
             processes[i].cpu_usage,
             processes[i].mem_usage,
             processes[i].priority, // Print the priority string
