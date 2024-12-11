@@ -11,6 +11,7 @@
 #include "process.h"
 #include "io.h"
 #include "ui.h"
+#include <string.h>
 
 #define MAX_PROCESSES 4096
 #define INITIAL_PROCESS_CAPACITY 1024
@@ -203,19 +204,23 @@ void list_processes() {
 
     qsort(processes, process_count, sizeof(ProcessInfo), compare_cpu_usage);
 
-    printf("\033[%d;1H \033[1;33m%-6s %-12s %-10s %-5s %-15s %-15s %-15s %-8s %-15s %-15s %-15s %-20s %-45s\033[0m\n", 
+    printf("\033[%d;1H \033[1;36m%-6s %-12s %-15s %-5s %-15s %-15s %-15s %-8s %-15s %-15s %-15s %-20s %-45s\033[0m\n", 
         PROC_INFO_POS, "PID", "USER", "PRIORITY", "NICE", "VIRTUAL_MEM", "RES_MEM", "SH_MEM", "STATUS", "CPU_USAGE(%)", "MEM_USAGE(%)", "DISK READ (MB)", "DISK WRITE (MB)", "NAME");
     printf("\033[%d;1H------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------\n", PROC_INFO_POS+1);
 
     for (int i = 0; i < process_count && i < 10; i++) {
+        int nice = processes[i].nice;
+        char* priority_text = nice == 0 ? "  (Normal)" : nice < 0 ? " (High)" : " (Low)";
+        char* priority = strcat(processes[i].priority, priority_text);
+
         unsigned long long read_bytes = 0, write_bytes = 0;
         get_disk_io(processes[i].pid, &read_bytes, &write_bytes);
 
-        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;37m%-10s\033[0m \033[1;32m%-5d \033[1;35m%-15ld \033[1;35m%-15ld \033[1;35m%-15ld \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-15.2f \033[1;37m%-20.2f \033[1;35m%-45s\n",
+        printf("\033[1;32m%-6d \033[1;33m%-12s \033[1;37m%-15s \033[0m \033[1;32m%-5d \033[1;35m%-15ld \033[1;35m%-15ld \033[1;35m%-15ld \033[1;34m%-8s \033[1;34m%-15.2f \033[1;31m%-15.2f \033[1;37m%-15.2f \033[1;37m%-20.2f \033[1;35m%-45s\n",
             processes[i].pid,
             processes[i].user,
-            processes[i].priority,
-            processes[i].nice,
+            priority,
+            nice,
             processes[i].virtual_mem,
             processes[i].res_mem,
             processes[i].shared_mem,

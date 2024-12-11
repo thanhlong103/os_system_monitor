@@ -32,3 +32,7 @@ The sysmon will run by default sampling time is 1 second. If you want to change 
 ```
     ./sysmon 3
 ```
+
+If the layout appears broken or does not display properly, try zooming out the terminal by using the following methods:
+- **From the menu**: Go to `View` -> `Zoom Out`.
+- **Using a keyboard shortcut**: Press `Ctrl + -` to zoom out.
