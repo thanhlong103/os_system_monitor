@@ -8,6 +8,7 @@
 #include "memory.h"
 #include "cpu.h"
 #include "process.h"
+#include "filesystem.h"
 
 int main() {
     print_static_ui();
@@ -30,6 +31,8 @@ int main() {
         update_memory_info(total_mem, used_mem, mem_available, mem_free, mem_cached, mem_buffers, kreclaimable);
         update_swap_info(total_swap,free_swap);
         update_process_info();
+
+        get_file_system_stats();
 
         // clock_t end_calculation = clock();  // End measuring time for each iteration
         // double calculation_time = ((double)(end_calculation - start_calculation)) / CLOCKS_PER_SEC;  // Time in seconds
