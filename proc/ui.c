@@ -37,7 +37,7 @@ void update_cpu_info(double cpu_usage, double user_pct, double system_pct, doubl
 
 void update_memory_info(long total_mem, long used_mem, long available_mem, long mem_free, long mem_cached, long mem_buffers, long kreclaimable)
 {
-    printf("\033[%d;1HMemory: \033[1;32m%.2f MB\033[0m, Used: \033[1;31m%.2f MB\033[0m, Available: \033[1;32m%.2f MB\033[0m, Free: %.2f MB, Buff/Cache: %.2f MB\n",
+    printf("\033[%d;1HMemory: \033[1m%.2f MB\033[0m, Used: \033[1m%.2f MB\033[0m, Available: \033[1m%.2f MB\033[0m, Free: \033[1m%.2f\033[0m MB, Buff/Cache: \033[1m%.2f MB\n",
         MEM_INFO_POS + 2,
         total_mem / 1024.0,                                  // Total Memory in green
         used_mem / 1024.0,
@@ -45,13 +45,13 @@ void update_memory_info(long total_mem, long used_mem, long available_mem, long 
         mem_free / 1024.0,                                   // Free Memory in default color
         (mem_buffers + mem_cached + kreclaimable) / 1024.0); // Buff/Cache Memory in default color
 
-    printf("\033[%d;1HMemory Usage: \033[1;36m%.2f%%\033[0m\n", MEM_INFO_POS + 1, (double)used_mem / total_mem * 100.0);
+    printf("\033[%d;1HMemory Usage: \033[1;32m%.2f%%\033[0m\n", MEM_INFO_POS + 1, (double)used_mem / total_mem * 100.0);
 
 }
 
 void update_swap_info(long total_swap, long free_swap)
 {
-    printf("\033[%d;1HSwap: \033[1;32m%.2f MB\033[0m, Used Swap: \033[1;31m%.2f MB\033[0m, Free Swap: %.2f MB\n",
+    printf("\033[%d;1HSwap: \033[1m%.2f MB\033[0m, Used Swap: \033[1m%.2f MB\033[0m, Free Swap: \033[1m%.2f MB\n",
            MEM_INFO_POS + 3,
            total_swap / 1024.0,                               
            (total_swap - free_swap)/ 1024.0,                                 
