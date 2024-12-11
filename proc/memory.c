@@ -44,5 +44,5 @@ void get_memory_info(long *total_mem, long *used_mem, long *mem_buffers, long *m
     fclose(fp);
 
     // Used memory = Total memory - Free memory
-    *used_mem = *total_mem - *mem_available;
+    *used_mem = *total_mem - *mem_available - *mem_free;
 }

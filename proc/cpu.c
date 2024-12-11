@@ -108,6 +108,34 @@ int get_thread_count() {
 //     return cpu_usage;
 // }
 
+#define MAX_PROCESSES 4096
+
+PrevProcessData prev_data[MAX_PROCESSES];
+int prev_data_count = 0;
+
+PrevProcessData *find_prev_data(int pid) {
+    for (int i = 0; i < prev_data_count; i++) {
+        if (prev_data[i].pid == pid) {
+            return &prev_data[i];
+        }
+    }
+    return NULL;
+}
+
+void update_prev_data(int pid, long total_time, double process_uptime) {
+    PrevProcessData *data = find_prev_data(pid);
+    if (data) {
+        data->prev_total_time = total_time;
+        data->prev_process_uptime = process_uptime;
+    } else {
+        if (prev_data_count < MAX_PROCESSES) {
+            prev_data[prev_data_count].pid = pid;
+            prev_data[prev_data_count].prev_total_time = total_time;
+            prev_data[prev_data_count].prev_process_uptime = process_uptime;
+            prev_data_count++;
+        }
+    }
+}
 
 int compare_cpu_usage(const void *a, const void *b) {
     double usage_a = ((ProcessInfo *)a)->cpu_usage;
@@ -125,10 +153,10 @@ void list_processes() {
     long system_uptime;
     long clock_ticks = sysconf(_SC_CLK_TCK);
     long total_memory = 0;
-    ProcessInfo *processes = NULL;
+    // ProcessInfo *processes = NULL;
     int process_count = 0;
     int max_processes = 1024;
-    processes = malloc(max_processes * sizeof(ProcessInfo));
+    ProcessInfo *processes = malloc(MAX_PROCESSES * sizeof(ProcessInfo));
 
     if (processes == NULL) {
         perror("Failed to allocate memory for process list");
@@ -171,41 +199,32 @@ void list_processes() {
             continue;
         }
 
-        snprintf(path, sizeof(path), "/proc/%s/stat", entry->d_name);
-        fp = fopen(path, "r");
-        if (fp == NULL) {
-            continue;
-        }
-
         int pid;
         char comm[256], state;
-        long utime, stime, cutime, cstime, starttime;
-        fscanf(fp, "%d %s %c", &pid, comm, &state);
+        long utime, stime, starttime;
 
-        for (int i = 0; i < 10; i++) {
-            fscanf(fp, "%*s");
-        }
-
-        fscanf(fp, "%ld %ld %ld %ld %*s %*s %*s %*s %ld", 
-               &utime, &stime, &cutime, &cstime, &starttime);
-        fclose(fp);
-
-        long total_time = utime + stime;
-        double process_uptime = system_uptime - (starttime / clock_ticks);
-        double cpu_usage = (process_uptime > 0) ? (total_time / (double)clock_ticks / process_uptime) * 100.0 : 0.0;
-
-        snprintf(path, sizeof(path), "/proc/%s/comm", entry->d_name);
+        snprintf(path, sizeof(path), "/proc/%s/stat", entry->d_name);
         fp = fopen(path, "r");
         if (fp) {
-            if (fgets(process_name, sizeof(process_name), fp)) {
-                process_name[strcspn(process_name, "\n")] = '\0';
-            } else {
-                strcpy(process_name, "unknown");
-            }
+            // Read process data, including PID and command name (comm)
+            fscanf(fp, "%d (%255[^)]) %c", &pid, comm, &state); // Extract name without parentheses
+            for (int i = 0; i < 10; i++) fscanf(fp, "%*s");
+            fscanf(fp, "%ld %ld %*s %*s %*s %*s %*s %ld", &utime, &stime, &starttime);
             fclose(fp);
         } else {
-            strcpy(process_name, "unknown");
+            continue; // Skip this process if the stat file can't be read
+}
+        long total_time = utime + stime;
+        double process_uptime = system_uptime - (starttime / clock_ticks);
+
+        double cpu_usage = 0.0;
+        PrevProcessData *prev = find_prev_data(pid);
+        if (prev && process_uptime > prev->prev_process_uptime) {
+            cpu_usage = (double)(total_time - prev->prev_total_time) * 100 /
+                        (clock_ticks * (process_uptime - prev->prev_process_uptime));
         }
+
+        update_prev_data(pid, total_time, process_uptime);
 
         long mem_usage = 0;
         snprintf(path, sizeof(path), "/proc/%s/status", entry->d_name);
@@ -223,17 +242,19 @@ void list_processes() {
 
         double mem_usage_percentage = (total_memory > 0) ? (mem_usage / (double)total_memory) * 100.0 : 0.0;
 
-        if (process_count >= max_processes) {
+        if (process_count >= MAX_PROCESSES) {
             max_processes *= 2;
-            processes = realloc(processes, max_processes * sizeof(ProcessInfo));
+            processes = realloc(processes, MAX_PROCESSES * sizeof(ProcessInfo));
             if (processes == NULL) {
                 perror("Failed to reallocate memory for process list");
                 return;
             }
         }
 
-        processes[process_count].pid = pid;
-        strncpy(processes[process_count].name, process_name, sizeof(processes[process_count].name) - 1);
+        processes[process_count].pid = pid; 
+        strncpy(processes[process_count].name, comm, sizeof(processes[process_count].name) - 1);
+        processes[process_count].name[sizeof(processes[process_count].name) - 1] = '\0'; // Ensure null-termination
+
 
         snprintf(path, sizeof(path), "/proc/%s", entry->d_name);
         if (stat(path, &statbuf) == 0) {

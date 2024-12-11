@@ -12,6 +12,7 @@
 #include <sys/time.h>
 #include "task.h"
 #include "ui.h"
+#include "memory.h"
 
 // Function prototypes
 double get_cpu_usage();
