@@ -1,13 +1,19 @@
 # OS System Monitor
 
-This is a terminal-based system monitor designed to provide an overview of the system's performance. It display informations about CPU usage, memory, tasks, IO, and processes. For now, it just supports full-screen terminal view when running.
+```
+Cao Hoang Dung - 210027
+Nguyen Thanh Long - 210085
+Nguyen Duc Manh - 210230
+```
+
+Each foler ```kernel``` and ```proc``` was used to implement system monitor using its corresponding approach: getting processes' information directly from the kernel and from ```proc ``` file system. However, we tried with the ```kernel``` approach and found it quite difficult, so we only proceed with the ```proc``` approach.
 
 ## Features
 1. General informations of Tasks, CPU and Memory
 2. Detail informations of each process (PID, User, CPU Usage (%), ...)
 3. File System 
 
-## Installation
+## Compile
 
 Follow these steps to compile the project:
 
